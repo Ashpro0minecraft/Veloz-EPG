@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="assets/banner.svg" alt="Veloz EPG Hub Banner" width="100%">
+</p>
 <h1 align="center">📺 Veloz EPG Hub</h1>
 
 <p align="center">
