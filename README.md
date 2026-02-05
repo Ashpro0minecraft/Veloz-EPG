@@ -1,120 +1,39 @@
-<p align="center">
-  <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="Veloz EPG Hub banner">
-  <defs>
-    <!-- Blue palette -->
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%"  stop-color="#050B1E"/>
-      <stop offset="45%" stop-color="#071A3A"/>
-      <stop offset="100%" stop-color="#0B3A6E"/>
-    </linearGradient>
-
-    <radialGradient id="glow" cx="55%" cy="35%" r="70%">
-      <stop offset="0%" stop-color="#7DD3FC" stop-opacity="0.35"/>
-      <stop offset="45%" stop-color="#38BDF8" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="#0B3A6E" stop-opacity="0"/>
-    </radialGradient>
-
-    <linearGradient id="titleFill" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#E0F2FE"/>
-      <stop offset="55%" stop-color="#7DD3FC"/>
-      <stop offset="100%" stop-color="#38BDF8"/>
-    </linearGradient>
-
-    <linearGradient id="chipFill" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0B2B58"/>
-      <stop offset="100%" stop-color="#062046"/>
-    </linearGradient>
-
-    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.35"/>
-    </filter>
-
-    <filter id="titleGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="10" result="blur"/>
-      <feColorMatrix in="blur" type="matrix"
-        values="1 0 0 0 0.2
-                0 1 0 0 0.7
-                0 0 1 0 1
-                0 0 0 0.8 0" result="glow"/>
-      <feMerge>
-        <feMergeNode in="glow"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-
-    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
-      <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#7DD3FC" stroke-opacity="0.08" stroke-width="2"/>
-    </pattern>
-
-    <style>
-      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-      .sans { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; }
-    </style>
-  </defs>
-
+<p align="center">  
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-label="Veloz EPG Hub">
   <!-- Background -->
-  <rect width="1280" height="640" fill="url(#bg)"/>
-  <rect width="1280" height="640" fill="url(#glow)"/>
-  <rect width="1280" height="640" fill="url(#grid)"/>
+  <rect width="1280" height="320" fill="#06162F"/>
+  <circle cx="260" cy="90" r="220" fill="#0B3A6E" opacity="0.75"/>
+  <circle cx="1060" cy="250" r="260" fill="#0A2F5A" opacity="0.75"/>
+  <path d="M0 250 C260 180 520 330 780 240 C980 170 1120 220 1280 140 L1280 320 L0 320 Z" fill="#0B3A6E" opacity="0.55"/>
+  <path d="M0 270 C280 200 520 350 800 260 C1020 190 1140 240 1280 160" fill="none" stroke="#38BDF8" stroke-width="6" opacity="0.55"/>
 
-  <!-- Decorative arcs -->
-  <g opacity="0.22">
-    <path d="M-140,520 C180,360 420,720 720,540 C980,385 1110,430 1420,260"
-          fill="none" stroke="#38BDF8" stroke-width="18" stroke-linecap="round"/>
-    <path d="M-170,560 C160,400 420,760 720,580 C1000,420 1120,470 1460,300"
-          fill="none" stroke="#7DD3FC" stroke-width="8" stroke-linecap="round"/>
-  </g>
+  <!-- Small site badge -->
+  <rect x="56" y="44" width="240" height="44" rx="14" fill="#0A2A4F" stroke="#38BDF8" stroke-opacity="0.55"/>
+  <circle cx="82" cy="66" r="7" fill="#38BDF8"/>
+  <text x="104" y="72" font-family="Verdana, Arial, sans-serif" font-size="18" fill="#E0F2FE">goveloz.me</text>
 
-  <!-- Top-left mini badge -->
-  <g transform="translate(70,70)" filter="url(#softShadow)">
-    <rect x="0" y="0" rx="18" ry="18" width="260" height="54" fill="url(#chipFill)" stroke="#38BDF8" stroke-opacity="0.35"/>
-    <circle cx="28" cy="27" r="10" fill="#38BDF8"/>
-    <text x="52" y="35" class="mono" font-size="20" fill="#E0F2FE" opacity="0.95">goveloz.me</text>
-  </g>
+  <!-- Title -->
+  <text x="640" y="150" text-anchor="middle"
+        font-family="Verdana, Arial, sans-serif"
+        font-size="86" font-weight="800"
+        fill="#E0F2FE">VELOZ</text>
 
-  <!-- Main title -->
-  <g transform="translate(0,0)" filter="url(#titleGlow)">
-    <text x="640" y="220" text-anchor="middle" class="sans" font-size="120" font-weight="900"
-          fill="url(#titleFill)" letter-spacing="2">VELOZ</text>
-    <text x="640" y="320" text-anchor="middle" class="sans" font-size="86" font-weight="800"
-          fill="#BAE6FD" opacity="0.98" letter-spacing="1.5">EPG HUB</text>
-  </g>
+  <text x="640" y="214" text-anchor="middle"
+        font-family="Verdana, Arial, sans-serif"
+        font-size="56" font-weight="800"
+        fill="#7DD3FC">EPG HUB</text>
 
   <!-- Subtitle -->
-  <text x="640" y="380" text-anchor="middle" class="sans" font-size="26" font-weight="700"
-        fill="#E0F2FE" opacity="0.9" letter-spacing="3">
-    FAST • RELIABLE • IPTV EPG SOURCES
-  </text>
+  <text x="640" y="258" text-anchor="middle"
+        font-family="Verdana, Arial, sans-serif"
+        font-size="18" font-weight="700"
+        fill="#BAE6FD" letter-spacing="2">FAST • RELIABLE • IPTV EPG SOURCES</text>
 
-  <!-- Feature chips -->
-  <g transform="translate(640,460)" filter="url(#softShadow)">
-    <g transform="translate(-420,0)">
-      <rect x="0" y="0" rx="22" ry="22" width="240" height="56" fill="url(#chipFill)" stroke="#7DD3FC" stroke-opacity="0.28"/>
-      <text x="120" y="36" text-anchor="middle" class="mono" font-size="22" fill="#E0F2FE">XMLTV</text>
-    </g>
-    <g transform="translate(-150,0)">
-      <rect x="0" y="0" rx="22" ry="22" width="240" height="56" fill="url(#chipFill)" stroke="#7DD3FC" stroke-opacity="0.28"/>
-      <text x="120" y="36" text-anchor="middle" class="mono" font-size="22" fill="#E0F2FE">GZIP (.xml.gz)</text>
-    </g>
-    <g transform="translate(120,0)">
-      <rect x="0" y="0" rx="22" ry="22" width="240" height="56" fill="url(#chipFill)" stroke="#7DD3FC" stroke-opacity="0.28"/>
-      <text x="120" y="36" text-anchor="middle" class="mono" font-size="22" fill="#E0F2FE">CDN READY</text>
-    </g>
-  </g>
-
-  <!-- Bottom hint -->
-  <text x="640" y="590" text-anchor="middle" class="mono" font-size="18"
-        fill="#93C5FD" opacity="0.85">
-    Airtel • Tata Play • DishTV  —  Updated EPG feeds on epg.goveloz.me
-  </text>
-
-  <!-- Corner dots -->
-  <g opacity="0.35">
-    <circle cx="1160" cy="110" r="6" fill="#38BDF8"/>
-    <circle cx="1190" cy="140" r="4" fill="#7DD3FC"/>
-    <circle cx="1220" cy="110" r="3" fill="#E0F2FE"/>
-    <circle cx="1180" cy="170" r="3" fill="#E0F2FE"/>
-  </g>
+  <!-- Footer hint -->
+  <text x="640" y="294" text-anchor="middle"
+        font-family="Verdana, Arial, sans-serif"
+        font-size="14"
+        fill="#93C5FD">Airtel • Tata Play • DishTV  —  epg.goveloz.me</text>
 </svg>
 </p>
 
