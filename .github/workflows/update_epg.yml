@@ -1,4 +1,4 @@
-Name: Generate EPGs and Push to Repo
+name: Generate EPGs and Push to Repo
 
 on:
   schedule:
