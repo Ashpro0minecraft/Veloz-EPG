@@ -1,0 +1,88 @@
+Name: Generate EPGs and Push to Repo
+
+on:
+  schedule:
+    - cron: '30 0 * * *' # Runs daily at 6:00 AM IST (00:30 UTC)
+  workflow_dispatch: # Allows manual trigger
+
+permissions:
+  contents: write # Required to commit and push changes back to the repo
+
+jobs:
+  generate-and-push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Latest iptv-org/epg
+        run: |
+          echo "Cloning latest iptv-org/epg tool..."
+          git clone --depth 1 https://github.com/iptv-org/epg.git temp-epg
+          cd temp-epg
+          npm install
+
+      - name: 1. Grab JioTV (Cancel after 5 errors)
+        working-directory: ./temp-epg
+        continue-on-error: true
+        run: |
+          echo "Grabbing JioTV..."
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+            npm run grab --- --sites=jiotv.com --lang=en --days=1 --output=../jiotv.xml.gz && break
+            n=$((n+1))
+            echo "❌ JioTV grab failed. Error count: $n of 5..."
+            sleep 5
+          done
+          
+          if [ "$n" -ge 5 ]; then
+            echo "⚠️ JioTV failed 5 times. Canceling JioTV grab and moving to the next provider..."
+          fi
+
+      - name: 2. Grab Dish TV
+        working-directory: ./temp-epg
+        continue-on-error: true
+        run: |
+          echo "Grabbing Dish TV..."
+          npm run grab --- --sites=dishtv.in --lang=en --days=1 --output=../dishtv.xml.gz
+
+      - name: 3. Grab Airtel Xstream
+        working-directory: ./temp-epg
+        continue-on-error: true
+        run: |
+          echo "Grabbing Airtel Xstream..."
+          npm run grab --- --sites=airtelxstream.in --lang=en --days=1 --output=../airtel.xml.gz
+
+      - name: 4. Grab Tata Play
+        working-directory: ./temp-epg
+        continue-on-error: true
+        run: |
+          echo "Grabbing Tata Play..."
+          npm run grab --- --sites=tataplay.com --lang=en --days=1 --output=../tataplay.xml.gz
+
+      - name: Clean up temporary files
+        run: |
+          rm -rf temp-epg
+
+      - name: Commit and Push to GitHub
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add jiotv.xml.gz dishtv.xml.gz airtel.xml.gz tataplay.xml.gz
+          
+          if git diff-index --quiet HEAD --; then
+            echo "🟢 No changes detected in EPGs. Skipping commit."
+          else
+            echo "🟡 Changes detected! Committing and pushing..."
+            git commit -m "Automated EPG Update: $(date +'%Y-%m-%d')"
+            git push
+            echo "✅ Push successful!"
+          fi
