@@ -28,24 +28,6 @@ jobs:
           cd temp-epg
           npm install
 
-      - name: 1. Grab JioTV (Cancel after 5 errors)
-        working-directory: ./temp-epg
-        continue-on-error: true
-        run: |
-          echo "Grabbing JioTV..."
-          n=0
-          until [ "$n" -ge 5 ]
-          do
-            npm run grab --- --sites=jiotv.com --lang=en --days=1 --output=../jiotv.xml.gz && break
-            n=$((n+1))
-            echo "❌ JioTV grab failed. Error count: $n of 5..."
-            sleep 5
-          done
-          
-          if [ "$n" -ge 5 ]; then
-            echo "⚠️ JioTV failed 5 times. Canceling JioTV grab and moving to the next provider..."
-          fi
-
       - name: 2. Grab Dish TV
         working-directory: ./temp-epg
         continue-on-error: true
@@ -76,7 +58,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          git add jiotv.xml.gz dishtv.xml.gz airtel.xml.gz tataplay.xml.gz
+          git add dishtv.xml.gz airtel.xml.gz tataplay.xml.gz
           
           if git diff-index --quiet HEAD --; then
             echo "🟢 No changes detected in EPGs. Skipping commit."
