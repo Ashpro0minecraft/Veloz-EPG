@@ -151,6 +151,5 @@ Your support keeps the project alive.
 ---
 
 <p align="center">
-  © 2025 <b>Veloz Innovations Pvt. Ltd.</b><br>
-  Built with ❤️ for the IPTV community
+  © 2026 <b>Veloz Innovations Pvt. Ltd.</b><br>
 </p>
