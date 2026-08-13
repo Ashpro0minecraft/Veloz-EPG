@@ -33,21 +33,24 @@ jobs:
         continue-on-error: true
         run: |
           echo "Grabbing Dish TV..."
-          npm run grab --- --sites=dishtv.in --lang=en --days=1 --output=../dishtv.xml.gz
+          npm run grab --- --sites=dishtv.in --lang=en --days=1 --output=../dishtv.xml
+          gzip -9 -f ../dishtv.xml
 
       - name: 3. Grab Airtel Xstream
         working-directory: ./temp-epg
         continue-on-error: true
         run: |
           echo "Grabbing Airtel Xstream..."
-          npm run grab --- --sites=airtelxstream.in --lang=en --days=1 --output=../airtel.xml.gz
+          npm run grab --- --sites=airtelxstream.in --lang=en --days=1 --output=../airtel.xml
+          gzip -9 -f ../airtel.xml
 
       - name: 4. Grab Tata Play
         working-directory: ./temp-epg
         continue-on-error: true
         run: |
           echo "Grabbing Tata Play..."
-          npm run grab --- --sites=tataplay.com --lang=en --days=1 --output=../tataplay.xml.gz
+          npm run grab --- --sites=tataplay.com --lang=en --days=1 --output=../tataplay.xml
+          gzip -9 -f ../tataplay.xml
 
       - name: Clean up temporary files
         run: |
