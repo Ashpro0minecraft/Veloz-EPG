@@ -33,7 +33,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "Grabbing Dish TV..."
-          npm run grab --- --sites=dishtv.in --lang=en --days=1 --output=../dishtv.xml
+          npm run grab --- --sites=dishtv.in --days=1 --output=../dishtv.xml
           gzip -9 -f ../dishtv.xml
 
       - name: 3. Grab Airtel Xstream
@@ -41,7 +41,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "Grabbing Airtel Xstream..."
-          npm run grab --- --sites=airtelxstream.in --lang=en --days=1 --output=../airtel.xml
+          npm run grab --- --sites=airtelxstream.in --days=1 --output=../airtel.xml
           gzip -9 -f ../airtel.xml
 
       - name: 4. Grab Tata Play
@@ -49,7 +49,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "Grabbing Tata Play..."
-          npm run grab --- --sites=tataplay.com --lang=en --days=1 --output=../tataplay.xml
+          npm run grab --- --sites=tataplay.com --days=1 --output=../tataplay.xml
           gzip -9 -f ../tataplay.xml
 
       - name: Clean up temporary files
