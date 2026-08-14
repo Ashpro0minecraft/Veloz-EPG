@@ -1,13 +1,28 @@
-name: Generate EPGs and Push to Repo
+name: Generate EPGs, Commit, and Deploy to Pages
 
-on: 
+on:
+  schedule:
+    - cron: '0 */24 * * *' # Daily schedule
+         # Daily schedule # Runs daily at 6:00 AM IST (00:30 UTC)
+      
+  push:
+    branches: ["main"]
   workflow_dispatch: # Allows manual trigger
 
 permissions:
-  contents: write # Required to commit and push changes back to the repo
+  contents: write # Required for the bot to commit to the repo
+  pages: write    # Required to deploy to epg.goveloz.me
+  id-token: write # Required for GitHub Pages deployment
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  generate-and-push:
+  generate-commit-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     timeout-minutes: 300
     steps:
@@ -26,28 +41,28 @@ jobs:
           cd temp-epg
           npm install
 
-      - name: 2. Grab Dish TV
+      - name: Grab Dish TV
         working-directory: ./temp-epg
         continue-on-error: true
         run: |
           echo "Grabbing Dish TV..."
-          npm run grab --- --sites=dishtv.in --days=1 --output=../dishtv.xml
+          npm run grab --- --sites=dishtv.in --lang=en --maxConnections=10 --output=../dishtv.xml
           gzip -9 -f ../dishtv.xml
 
-      - name: 3. Grab Airtel Xstream
+      - name: Grab Airtel Xstream
         working-directory: ./temp-epg
         continue-on-error: true
         run: |
           echo "Grabbing Airtel Xstream..."
-          npm run grab --- --sites=airtelxstream.in --days=1 --output=../airtel.xml
+          npm run grab --- --sites=airtelxstream.in --lang=en --maxConnections=10 --output=../airtel.xml
           gzip -9 -f ../airtel.xml
 
-      - name: 4. Grab Tata Play
+      - name: Grab Tata Play
         working-directory: ./temp-epg
         continue-on-error: true
         run: |
           echo "Grabbing Tata Play..."
-          npm run grab --- --sites=tataplay.com --days=1 --output=../tataplay.xml
+          npm run grab --- --sites=tataplay.com --lang=en --maxConnections=10 --output=../tataplay.xml
           gzip -9 -f ../tataplay.xml
 
       - name: Clean up temporary files
@@ -69,3 +84,16 @@ jobs:
             git push
             echo "✅ Push successful!"
           fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Uploads everything (including your new XML files and existing interface)
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
