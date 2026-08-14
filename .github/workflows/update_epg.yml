@@ -3,8 +3,6 @@ name: Generate EPGs, Commit, and Deploy to Pages
 on:
   schedule:
     - cron: '0 */24 * * *' # Daily schedule
-         # Daily schedule # Runs daily at 6:00 AM IST (00:30 UTC)
-      
   push:
     branches: ["main"]
   workflow_dispatch: # Allows manual trigger
@@ -91,7 +89,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Uploads everything (including your new XML files and existing interface)
           path: '.'
 
       - name: Deploy to GitHub Pages
