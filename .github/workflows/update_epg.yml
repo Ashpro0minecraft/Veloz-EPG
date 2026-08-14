@@ -1,8 +1,6 @@
 name: Generate EPGs and Push to Repo
 
-on:
-  schedule:
-    - cron: '30 0 * * *' # Runs daily at 6:00 AM IST (00:30 UTC)
+on: 
   workflow_dispatch: # Allows manual trigger
 
 permissions:
