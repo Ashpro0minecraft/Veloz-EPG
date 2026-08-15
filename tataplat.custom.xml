@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site site="tataplay.com">
+  <channels>
+    <channel site_id="123" xmltv_id="StarPlus.in">Star Plus</channel>
+    <channel site_id="456" xmltv_id="SonyMax.in">Sony MAX</channel>
+  </channels>
+</site>
