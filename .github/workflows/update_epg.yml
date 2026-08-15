@@ -1,4 +1,4 @@
-name: Generate EPGs, Commit, and Deploy to Pages
+name: Update EPGs
 
 on:
   schedule:
@@ -60,7 +60,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "Grabbing Tata Play..."
-          npm run grab --- --sites=tataplay.com --lang=en --maxConnections=10 --output=../tataplay.xml
+          npm run grab --- --sites=tataplay.com --lang=en --delay=1000 --maxConnections=1 --output=../tataplay.xml
           gzip -9 -f ../tataplay.xml
 
       - name: Clean up temporary files
