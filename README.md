@@ -38,9 +38,9 @@ All EPG files are publicly accessible and regularly updated.
 
 https://epg.goveloz.me/airtel.xml.gz
 
-### 📡 Tata Play
+### ~~📡 Tata Play~~
 
-https://epg.goveloz.me/tataplay.xml.gz
+~~https://epg.goveloz.me/tataplay.xml.gz~~
 
 ### 📡 Dish TV
 
