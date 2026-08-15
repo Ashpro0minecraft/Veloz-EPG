@@ -44,7 +44,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "Grabbing Tata Play..."
-          npm run grab --- --channels=../tataplay.custom.xml --lang=en --delay=2000 --maxConnections=1 --output=../tataplay.xml
+          npm run grab --- --sites=tataplay.com --lang=en --delay=2000 --maxConnections=1 --output=../tataplay.xml
 
           gzip -9 -f ../tataplay.xml
 
