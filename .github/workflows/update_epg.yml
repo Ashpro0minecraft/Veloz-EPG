@@ -44,7 +44,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "Grabbing Dish TV..."
-          npm run grab --- --sites=dishtv.in --lang=en --maxConnections=10 --output=../dishtv.xml
+          npm run grab --- --sites=dishtv.in --lang=en --days=1 --maxConnections=10 --output=../dishtv.xml
           gzip -9 -f ../dishtv.xml
 
       - name: Grab Airtel Xstream
@@ -52,7 +52,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "Grabbing Airtel Xstream..."
-          npm run grab --- --sites=airtelxstream.in --lang=en --maxConnections=10 --output=../airtel.xml
+          npm run grab --- --sites=airtelxstream.in --lang=en --days=1 --maxConnections=10 --output=../airtel.xml
           gzip -9 -f ../airtel.xml
           
       - name: Clean up temporary files
