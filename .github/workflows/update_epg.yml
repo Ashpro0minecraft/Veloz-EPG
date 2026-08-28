@@ -2,7 +2,7 @@ name: Update EPGs
 
 on:
   schedule:
-    - cron: '0 */24 * * *' # Daily schedule
+    - cron: '0 0 * * *' # Daily schedule
   push:
     branches: ["main"]
   workflow_dispatch: # Allows manual trigger
