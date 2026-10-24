@@ -44,7 +44,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "Grabbing Dish TV..."
-          npm run grab --- --sites=dishtv.in --lang=en --days=1 --maxConnections=10 --output=../dishtv.xml
+          npm run grab --- --sites=dishtv.in --lang=en --days=1 --maxConnections=1 --output=../dishtv.xml
           gzip -9 -f ../dishtv.xml
 
       - name: Grab Airtel Xstream
