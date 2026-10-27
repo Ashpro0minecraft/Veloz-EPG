@@ -39,6 +39,14 @@ jobs:
           cd temp-epg
           npm install
 
+      - name: Grab Tata Play
+        working-directory: ./temp-epg
+        continue-on-error: true
+        run: |
+          echo "Grabbing Tata Play..."
+          npm run grab --- --sites=tataplay.com --lang=en --maxConnections=1 --output=../tataplay.xml
+          gzip -9 -f ../tataplay.xml
+          
       - name: Grab Dish TV
         working-directory: ./temp-epg
         continue-on-error: true
@@ -52,7 +60,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "Grabbing Airtel Xstream..."
-          npm run grab --- --sites=airtelxstream.in --lang=en --days=1 --maxConnections=10 --output=../airtel.xml
+          npm run grab --- --sites=airtelxstream.in --lang=en --days=1 --maxConnections=1 --output=../airtel.xml
           gzip -9 -f ../airtel.xml
           
       - name: Clean up temporary files
@@ -70,7 +78,7 @@ jobs:
             echo "🟢 No changes detected in EPGs. Skipping commit."
           else
             echo "🟡 Changes detected! Committing and pushing..."
-            git commit -m "Automated EPG Update: $(date +'%Y-%m-%d')"
+            git commit -m "EPG Update #: $(date +'%Y-%m-%d')"
             git push
             echo "✅ Push successful!"
           fi
