@@ -2,15 +2,13 @@ name: Update EPGs
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Daily schedule
-  push:
-    branches: ["main"]
+    - cron: '47 23 * * *' # Runs at 5:17 AM IST (23:47 UTC)
   workflow_dispatch: # Allows manual trigger
 
 permissions:
-  contents: write # Required for the bot to commit to the repo
-  pages: write    # Required to deploy to epg.goveloz.me
-  id-token: write # Required for GitHub Pages deployment
+  contents: write # bot to commit to the repo
+  pages: write    # deploy to epg.goveloz.me
+  id-token: write # GitHub Pages deployment
 
 concurrency:
   group: "pages"
@@ -32,6 +30,11 @@ jobs:
         with:
           node-version: 22
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Install Latest iptv-org/epg
         run: |
           echo "Cloning latest iptv-org/epg tool..."
@@ -39,7 +42,7 @@ jobs:
           cd temp-epg
           npm install
 
-      - name: Grab Tata Play
+      - name: Grab & Push Tata Play
         working-directory: ./temp-epg
         continue-on-error: true
         run: |
@@ -47,15 +50,37 @@ jobs:
           npm run grab --- --sites=tataplay.com --lang=en --delay=2000 --maxConnections=1 --output=../tataplay.xml
           gzip -9 -f ../tataplay.xml
           
-      - name: Grab Dish TV
+          # commit and push
+          cd ..
+          git add tataplay.xml.gz
+          if ! git diff --cached --quiet; then
+            git commit -m "EPG Updated: $(date +'%Y-%m-%d')"
+            git push
+            echo "✅ Tata Play safely pushed to repo."
+          else
+            echo "🟢 No changes for Tata Play."
+          fi
+          
+      - name: Grab & Push Dish TV
         working-directory: ./temp-epg
         continue-on-error: true
         run: |
           echo "Grabbing Dish TV..."
           npm run grab --- --sites=dishtv.in --lang=en --days=1 --maxConnections=1 --output=../dishtv.xml
           gzip -9 -f ../dishtv.xml
+          
+          # commit and push
+          cd ..
+          git add dishtv.xml.gz
+          if ! git diff --cached --quiet; then
+            git commit -m "EPG Updated: $(date +'%Y-%m-%d')"
+            git push
+            echo "✅ Dish TV safely pushed to repo."
+          else
+            echo "🟢 No changes for Dish TV."
+          fi
 
-      - name: Grab Airtel Xstream
+      - name: Grab & Push Airtel Xstream
         working-directory: ./temp-epg
         continue-on-error: true
         run: |
@@ -63,25 +88,20 @@ jobs:
           npm run grab --- --sites=airtelxstream.in --lang=en --days=1 --maxConnections=1 --output=../airtel.xml
           gzip -9 -f ../airtel.xml
           
+          # commit and push
+          cd ..
+          git add airtel.xml.gz
+          if ! git diff --cached --quiet; then
+            git commit -m "EPG Updated: $(date +'%Y-%m-%d')"
+            git push
+            echo "✅ Airtel safely pushed to repo."
+          else
+            echo "🟢 No changes for Airtel."
+          fi
+          
       - name: Clean up temporary files
         run: |
           rm -rf temp-epg
-
-      - name: Commit and Push to GitHub
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          git add dishtv.xml.gz airtel.xml.gz tataplay.xml.gz
-          
-          if git diff-index --quiet HEAD --; then
-            echo "🟢 No changes detected in EPGs. Skipping commit."
-          else
-            echo "🟡 Changes detected! Committing and pushing..."
-            git commit -m "EPG Update #: $(date +'%Y-%m-%d')"
-            git push
-            echo "✅ Push successful!"
-          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
