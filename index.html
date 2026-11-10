@@ -1,150 +1,923 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veloz TV Guide</title>
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #3b82f6;
-        }
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            text-align: center;
-            color: var(--accent);
-            margin-bottom: 30px;
-        }
-        .epg-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .channel-card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .channel-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid #334155;
-            padding-bottom: 12px;
-        }
-        .channel-logo {
-            width: 60px;
-            height: 60px;
-            border-radius: 8px;
-            object-fit: contain;
-            background: #fff;
-            padding: 4px;
-        }
-        .channel-name {
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-        .program {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-        }
-        .program-time {
-            color: var(--accent);
-            font-weight: bold;
-            font-size: 0.85rem;
-            margin-bottom: 4px;
-        }
-        .program-title {
-            font-weight: 600;
-        }
-        /* Hide element if empty */
-        .hidden { display: none; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Veloz EPG — Live TV Guide & XMLTV Hub</title>
+  <style>
+    :root {
+      --bg-main: #090d16;
+      --bg-surface: #111827;
+      --bg-card: #1a2234;
+      --bg-card-hover: #212c42;
+      --logo-grey: #374151; /* Balanced mid-grey for channel logos */
+      --border: #2a364f;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.2);
+      --live-red: #ef4444;
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* Top Header & SVG Logo */
+    header {
+      background: rgba(17, 24, 39, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 12px 20px;
+    }
+
+    .header-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      background: var(--bg-main);
+      padding: 5px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .nav-tab {
+      background: transparent;
+      color: var(--text-secondary);
+      border: none;
+      padding: 8px 18px;
+      border-radius: 7px;
+      font-weight: 600;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .nav-tab.active {
+      background: var(--accent);
+      color: #06101e;
+      box-shadow: 0 2px 10px var(--accent-glow);
+    }
+
+    .live-clock {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      font-variant-numeric: tabular-nums;
+      background: var(--bg-main);
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1320px;
+      margin: 28px auto;
+      padding: 0 16px 60px;
+    }
+
+    .page-view {
+      display: none;
+    }
+
+    .page-view.active {
+      display: block;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* PAGE 1: COPY GUIDE LINKS */
+    .hero-banner {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .hero-banner h1 {
+      font-size: 1.9rem;
+      margin-bottom: 8px;
+    }
+
+    .hero-banner p {
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .guides-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .guide-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .guide-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .guide-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .url-box {
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #06101e;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.92;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text-primary);
+    }
+
+    .btn-outline:hover {
+      background: var(--bg-card-hover);
+    }
+
+    /* PAGE 2: EPG VIEWER */
+    .viewer-controls {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* 3 Divided EPG Sources */
+    .source-selector {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .source-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .source-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
+
+    .source-btn.active {
+      background: rgba(56, 189, 248, 0.14);
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    /* Search & Filter Bar */
+    .search-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .search-input-wrap {
+      flex: 1;
+      min-width: 240px;
+      position: relative;
+      display: flex;
+      gap: 8px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 11px 16px;
+      border-radius: 9px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+    }
+
+    .search-btn {
+      background: var(--accent);
+      color: #06101e;
+      border: none;
+      padding: 0 20px;
+      border-radius: 9px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+    }
+
+    /* EPG Channels Grid */
+    .epg-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 18px;
+    }
+
+    .channel-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .channel-top {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: rgba(17, 24, 39, 0.55);
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Greyish Logo Background (Not white, not black) */
+    .logo-box {
+      width: 58px;
+      height: 58px;
+      min-width: 58px;
+      background-color: var(--logo-grey);
+      border: 1px solid #4b5563;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      overflow: hidden;
+    }
+
+    .logo-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .logo-fallback {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #d1d5db;
+      text-align: center;
+    }
+
+    .channel-meta {
+      overflow: hidden;
+    }
+
+    .channel-name {
+      font-size: 1.08rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .channel-id {
+      font-size: 0.76rem;
+      color: var(--text-secondary);
+    }
+
+    /* Time Tabs inside each Channel (Past / Live / Future) */
+    .time-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: var(--bg-main);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .time-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 8px 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .time-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: rgba(56, 189, 248, 0.06);
+    }
+
+    /* Programme List Container */
+    .prog-list {
+      padding: 14px;
+      max-height: 360px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .prog-item {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .prog-item.is-live {
+      border-color: rgba(239, 68, 68, 0.5);
+      background: rgba(239, 68, 68, 0.06);
+    }
+
+    .prog-banner {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 7px;
+      background: var(--logo-grey);
+    }
+
+    .prog-time-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .live-pill {
+      background: var(--live-red);
+      color: #fff;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .prog-title {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .prog-desc {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 5px;
+      background: #1f2937;
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 2px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--live-red);
+    }
+
+    .load-more-wrap {
+      text-align: center;
+      margin-top: 28px;
+    }
+
+    .empty-msg {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 640px) {
+      .source-selector {
+        grid-template-columns: 1fr;
+      }
+      .epg-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
 
-    <h1>Veloz TV Guide (Tata Play)</h1>
-    <div id="epg-grid" class="epg-container">
-        <p style="text-align:center; width:100%;">Loading EPG Data...</p>
+  <!-- Header with Custom Veloz EPG SVG Art -->
+  <header>
+    <div class="header-inner">
+      <a href="#" class="brand-logo" onclick="switchPage('links'); return false;">
+        <svg width="210" height="42" viewBox="0 0 210 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Outer Hexagon TV Badge -->
+          <rect x="2" y="3" width="36" height="36" rx="9" fill="#1E293B" stroke="#38BDF8" stroke-width="2"/>
+          <!-- Lightning V Bolt -->
+          <path d="M13 11L20 31L29 11H24L20 21L17 11H13Z" fill="#38BDF8"/>
+          <circle cx="29" cy="29" r="3" fill="#EF4444"/>
+          <!-- Veloz EPG Typography -->
+          <text x="48" y="27" fill="#F8FAFC" font-family="system-ui, sans-serif" font-weight="800" font-size="22" letter-spacing="0.5">VELOZ</text>
+          <text x="125" y="27" fill="#38BDF8" font-family="system-ui, sans-serif" font-weight="800" font-size="22" letter-spacing="1">EPG</text>
+        </svg>
+      </a>
+
+      <div class="nav-tabs">
+        <button id="tab-links" class="nav-tab active" onclick="switchPage('links')">1. Guide Links</button>
+        <button id="tab-viewer" class="nav-tab" onclick="switchPage('viewer')">2. Live EPG Viewer</button>
+      </div>
+
+      <div id="clock" class="live-clock">Loading time...</div>
     </div>
+  </header>
 
-    <script>
-        // Formats XMLTV date (20261110053000 +0530) to readable 12hr time
-        function formatTime(xmlTime) {
-            if (!xmlTime) return '';
-            const y = xmlTime.substring(0,4);
-            const m = xmlTime.substring(4,6) - 1;
-            const d = xmlTime.substring(6,8);
-            const h = xmlTime.substring(8,10);
-            const min = xmlTime.substring(10,12);
-            
-            const date = new Date(y, m, d, h, min);
-            return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  <main>
+    <!-- PAGE 1: AVAILABLE GUIDES & COPY LINKS -->
+    <section id="page-links" class="page-view active">
+      <div class="hero-banner">
+        <h1>Available XMLTV EPG Guides</h1>
+        <p>Daily updated compressed XMLTV guides for IPTV players (TiviMate, Sparkle TV, OTT Navigator) with direct live web preview.</p>
+      </div>
+
+      <div class="guides-grid">
+        <!-- Tata Play Card -->
+        <div class="guide-card">
+          <div class="guide-card-header">
+            <span class="guide-title">Tata Play</span>
+            <span class="badge">Daily Auto-Update</span>
+          </div>
+          <p style="font-size: 0.88rem; color: var(--text-secondary);">Full Tata Play guide with channel logos, programme descriptions, and show banners.</p>
+          <div class="url-box" id="url-tataplay">https://epg.goveloz.me/tataplay.xml.gz</div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="copyUrl('url-tataplay', this)">Copy XML.GZ Link</button>
+            <button class="btn btn-outline" onclick="openProviderInViewer('tataplay')">View Live EPG</button>
+          </div>
+        </div>
+
+        <!-- Dish TV Card -->
+        <div class="guide-card">
+          <div class="guide-card-header">
+            <span class="guide-title">Dish TV</span>
+            <span class="badge">Daily Auto-Update</span>
+          </div>
+          <p style="font-size: 0.88rem; color: var(--text-secondary);">Compressed Dish TV India XMLTV schedule ready for any M3U or Stalker player.</p>
+          <div class="url-box" id="url-dishtv">https://epg.goveloz.me/dishtv.xml.gz</div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="copyUrl('url-dishtv', this)">Copy XML.GZ Link</button>
+            <button class="btn btn-outline" onclick="openProviderInViewer('dishtv')">View Live EPG</button>
+          </div>
+        </div>
+
+        <!-- Airtel Xstream Card -->
+        <div class="guide-card">
+          <div class="guide-card-header">
+            <span class="guide-title">Airtel Xstream</span>
+            <span class="badge">Daily Auto-Update</span>
+          </div>
+          <p style="font-size: 0.88rem; color: var(--text-secondary);">Complete Airtel Digital TV / Xstream EPG listings with programme metadata.</p>
+          <div class="url-box" id="url-airtel">https://epg.goveloz.me/airtel.xml.gz</div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="copyUrl('url-airtel', this)">Copy XML.GZ Link</button>
+            <button class="btn btn-outline" onclick="openProviderInViewer('airtel')">View Live EPG</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 2: LIVE EPG VIEWER (3 SOURCES) -->
+    <section id="page-viewer" class="page-view">
+      <div class="viewer-controls">
+        <!-- 3 Divided Sources -->
+        <div class="source-selector">
+          <button class="source-btn active" id="src-tataplay" onclick="selectSource('tataplay')">
+            <span>📡 Tata Play EPG</span>
+          </button>
+          <button class="source-btn" id="src-dishtv" onclick="selectSource('dishtv')">
+            <span>📡 Dish TV EPG</span>
+          </button>
+          <button class="source-btn" id="src-airtel" onclick="selectSource('airtel')">
+            <span>📡 Airtel Xstream EPG</span>
+          </button>
+        </div>
+
+        <!-- Search Bar for Channel or Programme Name -->
+        <div class="search-row">
+          <div class="search-input-wrap">
+            <input
+              type="text"
+              id="search-input"
+              class="search-input"
+              placeholder="Search channel name or programme title (e.g. Star Plus, Cricket, News)..."
+              oninput="handleSearch()"
+            />
+            <button class="search-btn" onclick="handleSearch()">Search</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <span id="guide-status">Select a source to load EPG...</span>
+        <span id="guide-updated"></span>
+      </div>
+
+      <div id="epg-grid" class="epg-grid"></div>
+
+      <div id="load-more-container" class="load-more-wrap" style="display: none;">
+        <button class="btn btn-outline" style="max-width: 260px;" onclick="renderMoreChannels()">Load More Channels</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const SOURCES = {
+      tataplay: { name: 'Tata Play', url: 'tataplay.json' },
+      dishtv: { name: 'Dish TV', url: 'dishtv.json' },
+      airtel: { name: 'Airtel Xstream', url: 'airtel.json' }
+    };
+
+    let currentSource = 'tataplay';
+    let allChannels = [];
+    let filteredChannels = [];
+    let renderedCount = 0;
+    const PAGE_SIZE = 36;
+    const cache = {};
+
+    // Update Live Clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toLocaleString([], {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Switch between Page 1 (Links) and Page 2 (Viewer)
+    function switchPage(page) {
+      document.getElementById('page-links').classList.toggle('active', page === 'links');
+      document.getElementById('page-viewer').classList.toggle('active', page === 'viewer');
+      document.getElementById('tab-links').classList.toggle('active', page === 'links');
+      document.getElementById('tab-viewer').classList.toggle('active', page === 'viewer');
+
+      if (page === 'viewer' && allChannels.length === 0) {
+        selectSource(currentSource);
+      }
+    }
+
+    function openProviderInViewer(sourceKey) {
+      currentSource = sourceKey;
+      switchPage('viewer');
+      selectSource(sourceKey);
+    }
+
+    // One-click Copy URL
+    async function copyUrl(elementId, btn) {
+      const text = document.getElementById(elementId).textContent.trim();
+      try {
+        await navigator.clipboard.writeText(text);
+        const orig = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => { btn.textContent = orig; }, 1800);
+      } catch {
+        prompt('Copy link:', text);
+      }
+    }
+
+    // Format Unix Epoch Seconds to readable time + date
+    function formatEpoch(sec) {
+      const d = new Date(sec * 1000);
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function formatDayAndTime(sec) {
+      const d = new Date(sec * 1000);
+      return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' • ' +
+             d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Load 1 of the 3 EPG Sources
+    async function selectSource(sourceKey) {
+      currentSource = sourceKey;
+      document.querySelectorAll('.source-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(`src-${sourceKey}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const grid = document.getElementById('epg-grid');
+      const status = document.getElementById('guide-status');
+      const updatedEl = document.getElementById('guide-updated');
+
+      grid.innerHTML = `<div class="empty-msg">Loading ${SOURCES[sourceKey].name} EPG data...</div>`;
+      document.getElementById('load-more-container').style.display = 'none';
+
+      try {
+        if (!cache[sourceKey]) {
+          const res = await fetch(SOURCES[sourceKey].url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          cache[sourceKey] = await res.json();
         }
 
-        async function loadEPG() {
-            try {
-                // Fetch the JSON file generated by your GitHub Action
-                const response = await fetch('epg.json');
-                const data = await response.json();
-                
-                const grid = document.getElementById('epg-grid');
-                grid.innerHTML = ''; // Clear loading text
+        const payload = cache[sourceKey];
+        allChannels = Array.isArray(payload) ? payload : (payload.channels || []);
 
-                // Loop through first 50 channels for the demo to prevent lag
-                data.slice(0, 50).forEach(channel => {
-                    if(channel.programs.length === 0) return; // Skip empty channels
-                    
-                    const card = document.createElement('div');
-                    card.className = 'channel-card';
-                    
-                    // Add Channel Header
-                    let html = `
-                        <div class="channel-header">
-                            <img src="${channel.logo}" alt="Logo" class="channel-logo" onerror="this.src='https://via.placeholder.com/60?text=TV'">
-                            <div class="channel-name">${channel.name}</div>
-                        </div>
-                    `;
-                    
-                    // Add first 3 programs for this channel
-                    const recentPrograms = channel.programs.slice(0, 3);
-                    recentPrograms.forEach(prog => {
-                        html += `
-                            <div class="program">
-                                <div class="program-time">${formatTime(prog.start)} - ${formatTime(prog.stop)}</div>
-                                <div class="program-title">${prog.title}</div>
-                            </div>
-                        `;
-                    });
-
-                    card.innerHTML = html;
-                    grid.appendChild(card);
-                });
-            } catch (error) {
-                document.getElementById('epg-grid').innerHTML = '<p>Error loading guide data. Ensure the Action has run successfully.</p>';
-                console.error("Fetch error:", error);
-            }
+        if (payload.updated) {
+          updatedEl.textContent = `Updated: ${new Date(payload.updated * 1000).toLocaleString()}`;
+        } else {
+          updatedEl.textContent = '';
         }
 
-        // Initialize
-        loadEPG();
-    </script>
+        handleSearch();
+      } catch (err) {
+        status.textContent = `Failed to load ${SOURCES[sourceKey].name}`;
+        grid.innerHTML = `<div class="empty-msg">⚠️ Could not load <b>${SOURCES[sourceKey].url}</b>. Run the GitHub Action first to generate the JSON files.</div>`;
+      }
+    }
+
+    // Search by Channel Name OR Programme Title
+    function handleSearch() {
+      const query = document.getElementById('search-input').value.trim().toLowerCase();
+
+      if (!query) {
+        filteredChannels = allChannels;
+      } else {
+        filteredChannels = allChannels.filter(ch => {
+          const nameMatch = (ch.name || '').toLowerCase().includes(query);
+          if (nameMatch) return true;
+          return (ch.programs || []).some(p => (p.t || '').toLowerCase().includes(query));
+        });
+      }
+
+      document.getElementById('guide-status').textContent =
+        `Showing ${filteredChannels.length} channels in ${SOURCES[currentSource].name}`;
+
+      const grid = document.getElementById('epg-grid');
+      grid.innerHTML = '';
+      renderedCount = 0;
+
+      if (filteredChannels.length === 0) {
+        grid.innerHTML = `<div class="empty-msg">No channels or programmes matched "${escapeHtml(query)}".</div>`;
+        document.getElementById('load-more-container').style.display = 'none';
+        return;
+      }
+
+      renderMoreChannels();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function renderMoreChannels() {
+      const grid = document.getElementById('epg-grid');
+      const nowSec = Math.floor(Date.now() / 1000);
+      const query = document.getElementById('search-input').value.trim().toLowerCase();
+
+      const slice = filteredChannels.slice(renderedCount, renderedCount + PAGE_SIZE);
+      slice.forEach((ch, idx) => {
+        const cardIndex = renderedCount + idx;
+        const card = document.createElement('div');
+        card.className = 'channel-card';
+
+        const progs = ch.programs || [];
+        const past = progs.filter(p => p.e <= nowSec).slice(-10).reverse(); // Most recent past first
+        const live = progs.filter(p => p.s <= nowSec && p.e > nowSec);
+        const future = progs.filter(p => p.s > nowSec).slice(0, 15);
+
+        // If searching for a specific programme, auto-select the tab containing the match
+        let defaultTab = 'live';
+        if (query && !(ch.name || '').toLowerCase().includes(query)) {
+          if (live.some(p => (p.t || '').toLowerCase().includes(query))) defaultTab = 'live';
+          else if (future.some(p => (p.t || '').toLowerCase().includes(query))) defaultTab = 'future';
+          else if (past.some(p => (p.t || '').toLowerCase().includes(query))) defaultTab = 'past';
+        } else if (live.length === 0 && future.length > 0) {
+          defaultTab = 'future';
+        }
+
+        const logoHtml = ch.logo
+          ? `<img src="${escapeHtml(ch.logo)}" alt="${escapeHtml(ch.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\\'logo-fallback\\'>TV</span>'">`
+          : `<span class="logo-fallback">TV</span>`;
+
+        card.innerHTML = `
+          <div class="channel-top">
+            <div class="logo-box">${logoHtml}</div>
+            <div class="channel-meta">
+              <div class="channel-name" title="${escapeHtml(ch.name)}">${escapeHtml(ch.name)}</div>
+              <div class="channel-id">${escapeHtml(ch.id)}</div>
+            </div>
+          </div>
+          <div class="time-tabs">
+            <button class="time-tab ${defaultTab === 'past' ? 'active' : ''}" onclick="switchCardTab(${cardIndex}, 'past', this)">Past (${past.length})</button>
+            <button class="time-tab ${defaultTab === 'live' ? 'active' : ''}" onclick="switchCardTab(${cardIndex}, 'live', this)">Live (${live.length})</button>
+            <button class="time-tab ${defaultTab === 'future' ? 'active' : ''}" onclick="switchCardTab(${cardIndex}, 'future', this)">Upcoming (${future.length})</button>
+          </div>
+          <div class="prog-list" id="prog-list-${cardIndex}">
+            ${renderProgrammeItems(defaultTab === 'past' ? past : defaultTab === 'live' ? live : future, defaultTab === 'live', nowSec, future[0])}
+          </div>
+        `;
+
+        card.dataset.past = JSON.stringify(past);
+        card.dataset.live = JSON.stringify(live);
+        card.dataset.future = JSON.stringify(future);
+        card.id = `channel-card-${cardIndex}`;
+
+        grid.appendChild(card);
+      });
+
+      renderedCount += slice.length;
+      document.getElementById('load-more-container').style.display =
+        renderedCount < filteredChannels.length ? 'block' : 'none';
+    }
+
+    function renderProgrammeItems(list, isLiveTab, nowSec, nextProg) {
+      if (!list || list.length === 0) {
+        return `<div style="color: var(--text-secondary); font-size: 0.85rem; padding: 10px 4px;">No programmes in this time slot.</div>`;
+      }
+
+      let html = list.map(p => {
+        const isCurrentlyAiring = p.s <= nowSec && p.e > nowSec;
+        const pct = isCurrentlyAiring
+          ? Math.min(100, Math.max(0, Math.round(((nowSec - p.s) / (p.e - p.s)) * 100)))
+          : 0;
+
+        const bannerHtml = p.img
+          ? `<img class="prog-banner" src="${escapeHtml(p.img)}" alt="${escapeHtml(p.t)}" loading="lazy" onerror="this.style.display='none'">`
+          : '';
+
+        const descHtml = p.d
+          ? `<div class="prog-desc">${escapeHtml(p.d)}</div>`
+          : '';
+
+        const progressHtml = isCurrentlyAiring
+          ? `<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>`
+          : '';
+
+        return `
+          <div class="prog-item ${isCurrentlyAiring ? 'is-live' : ''}">
+            ${bannerHtml}
+            <div class="prog-time-row">
+              <span>${formatDayAndTime(p.s)} – ${formatEpoch(p.e)}</span>
+              ${isCurrentlyAiring ? '<span class="live-pill">LIVE</span>' : ''}
+            </div>
+            <div class="prog-title">${escapeHtml(p.t)}</div>
+            ${descHtml}
+            ${progressHtml}
+          </div>
+        `;
+      }).join('');
+
+      // If on the Live tab, also preview the immediate next upcoming show
+      if (isLiveTab && nextProg) {
+        html += `
+          <div class="prog-item" style="opacity: 0.85;">
+            <div class="prog-time-row">
+              <span>Next: ${formatEpoch(nextProg.s)} – ${formatEpoch(nextProg.e)}</span>
+            </div>
+            <div class="prog-title">${escapeHtml(nextProg.t)}</div>
+            ${nextProg.d ? `<div class="prog-desc">${escapeHtml(nextProg.d)}</div>` : ''}
+          </div>
+        `;
+      }
+
+      return html;
+    }
+
+    function switchCardTab(cardIndex, tabType, btnEl) {
+      const card = document.getElementById(`channel-card-${cardIndex}`);
+      if (!card) return;
+
+      card.querySelectorAll('.time-tab').forEach(b => b.classList.remove('active'));
+      btnEl.classList.add('active');
+
+      const list = JSON.parse(card.dataset[tabType] || '[]');
+      const futureList = JSON.parse(card.dataset.future || '[]');
+      const nowSec = Math.floor(Date.now() / 1000);
+
+      const container = document.getElementById(`prog-list-${cardIndex}`);
+      container.innerHTML = renderProgrammeItems(list, tabType === 'live', nowSec, futureList[0]);
+    }
+  </script>
 </body>
 </html>
