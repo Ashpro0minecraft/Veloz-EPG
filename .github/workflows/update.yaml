@@ -1,0 +1,119 @@
+name: EPGs
+
+on:
+  schedule:
+    - cron: '47 23 * * *' # Runs at 5:17 AM IST (23:47 UTC)
+  workflow_dispatch: # Allows manual trigger
+
+permissions:
+  contents: write # bot to commit to the repo
+  pages: write    # deploy to epg.goveloz.me
+  id-token: write # GitHub Pages deployment
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  generate-commit-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install Latest iptv-org/epg
+        run: |
+          echo "Cloning latest iptv-org/epg tool..."
+          git clone --depth 1 https://github.com/iptv-org/epg.git temp-epg
+          cd temp-epg
+          npm install
+
+      - name: Grab, Convert & Push Tata Play
+        working-directory: ./temp-epg
+        continue-on-error: true
+        run: |
+          echo "Grabbing Tata Play..."
+          npm run grab --- --sites=tataplay.com --lang=en --delay=2000 --maxConnections=1 --output=../tataplay.xml
+          gzip -9 -f ../tataplay.xml
+          
+          # Convert to JSON and push
+          cd ..
+          node convert-epg.js tataplay.xml.gz tataplay.json
+          git add tataplay.xml.gz tataplay.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Tata Play EPG Updated: $(date +'%Y-%m-%d')"
+            git push
+            echo "✅ Tata Play XML.GZ & JSON safely pushed to repo."
+          else
+            echo "🟢 No changes for Tata Play."
+          fi
+          
+      - name: Grab, Convert & Push Dish TV
+        working-directory: ./temp-epg
+        continue-on-error: true
+        run: |
+          echo "Grabbing Dish TV..."
+          npm run grab --- --sites=dishtv.in --lang=en --days=1 --maxConnections=1 --output=../dishtv.xml
+          gzip -9 -f ../dishtv.xml
+          
+          # Convert to JSON and push
+          cd ..
+          node convert-epg.js dishtv.xml.gz dishtv.json
+          git add dishtv.xml.gz dishtv.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Dish TV EPG Updated: $(date +'%Y-%m-%d')"
+            git push
+            echo "✅ Dish TV XML.GZ & JSON safely pushed to repo."
+          else
+            echo "🟢 No changes for Dish TV."
+          fi
+
+      - name: Grab, Convert & Push Airtel Xstream
+        working-directory: ./temp-epg
+        continue-on-error: true
+        run: |
+          echo "Grabbing Airtel Xstream..."
+          npm run grab --- --sites=airtelxstream.in --lang=en --days=1 --maxConnections=1 --output=../airtel.xml
+          gzip -9 -f ../airtel.xml
+          
+          # Convert to JSON and push
+          cd ..
+          node convert-epg.js airtel.xml.gz airtel.json
+          git add airtel.xml.gz airtel.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Airtel EPG Updated: $(date +'%Y-%m-%d')"
+            git push
+            echo "✅ Airtel XML.GZ & JSON safely pushed to repo."
+          else
+            echo "🟢 No changes for Airtel."
+          fi
+          
+      - name: Clean up temporary files
+        run: |
+          rm -rf temp-epg
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
