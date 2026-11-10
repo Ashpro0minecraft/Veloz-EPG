@@ -52,10 +52,10 @@ jobs:
           
           # Convert to JSON and push
           cd ..
-          node convert-epg.js tataplay.xml.gz tataplay.json
+          node convert.js tataplay.xml.gz tataplay.json
           git add tataplay.xml.gz tataplay.json
           if ! git diff --cached --quiet; then
-            git commit -m "Tata Play EPG Updated: $(date +'%Y-%m-%d')"
+            git commit -m "EPG Updated: $(date +'%Y-%m-%d')"
             git push
             echo "✅ Tata Play XML.GZ & JSON safely pushed to repo."
           else
@@ -72,10 +72,10 @@ jobs:
           
           # Convert to JSON and push
           cd ..
-          node convert-epg.js dishtv.xml.gz dishtv.json
+          node convert.js dishtv.xml.gz dishtv.json
           git add dishtv.xml.gz dishtv.json
           if ! git diff --cached --quiet; then
-            git commit -m "Dish TV EPG Updated: $(date +'%Y-%m-%d')"
+            git commit -m "EPG Updated: $(date +'%Y-%m-%d')"
             git push
             echo "✅ Dish TV XML.GZ & JSON safely pushed to repo."
           else
@@ -92,10 +92,10 @@ jobs:
           
           # Convert to JSON and push
           cd ..
-          node convert-epg.js airtel.xml.gz airtel.json
+          node convert.js airtel.xml.gz airtel.json
           git add airtel.xml.gz airtel.json
           if ! git diff --cached --quiet; then
-            git commit -m "Airtel EPG Updated: $(date +'%Y-%m-%d')"
+            git commit -m "EPG Updated: $(date +'%Y-%m-%d')"
             git push
             echo "✅ Airtel XML.GZ & JSON safely pushed to repo."
           else
