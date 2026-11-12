@@ -2,7 +2,7 @@ name: EPGs
 
 on:
   schedule:
-    - cron: '47 23 * * *' # Runs at 5:17 AM IST (23:47 UTC)
+    - cron: '19 00 * * *' # Runs at
   workflow_dispatch: # Allows manual trigger
 
 permissions:
