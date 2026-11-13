@@ -1,9 +1,7 @@
 name: EPGs
 
 on:
-  schedule:
-    - cron: '19 00 * * *' # Runs at
-  workflow_dispatch: # Allows manual trigger
+ workflow_dispatch: # Allows manual trigger
 
 permissions:
   contents: write # bot to commit to the repo
