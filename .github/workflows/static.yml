@@ -38,6 +38,10 @@ jobs:
         with:
           # Upload entire repository
           path: '.'
+
+      - name: Wait for Pages artifact indexing
+        run: sleep 60
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
